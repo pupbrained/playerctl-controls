@@ -1,38 +1,31 @@
 {
   "schemaVersion": 1,
-  "id": "modid",
+  "id": "pctl-controls",
   "version": "${version}",
-
-  "name": "Example Mod",
-  "description": "This is an example description! Tell everyone what your mod is about!",
+  "name": "Playerctl Controls",
+  "description": "Simple mod that allows the user to control their media with playerctl inside of Minecraft.",
   "authors": [
-    "Me!"
+    "MARSUPIALGUTZ"
   ],
   "contact": {
-    "homepage": "https://fabricmc.net/",
-    "sources": "https://github.com/FabricMC/fabric-example-mod"
+    "homepage": "https://possums.xyz/",
+    "sources": "https://github.com/marsupialgutz/playerctl-controls"
   },
-
-  "license": "CC0-1.0",
-  "icon": "assets/modid/icon.png",
-
+  "license": "Based License",
+  "icon": "assets/pctl-meta/icon.png",
   "environment": "*",
   "entrypoints": {
     "main": [
-      "net.fabricmc.example.ExampleMod"
+      "net.marsupialgutz.pctl_meta.PlayerctlControls"
     ]
   },
   "mixins": [
-    "modid.mixins.json"
+    "pctl-controls.mixins.json"
   ],
-
   "depends": {
     "fabricloader": ">=0.13.3",
     "fabric": "*",
     "minecraft": "1.18.x",
     "java": ">=17"
-  },
-  "suggests": {
-    "another-mod": "*"
   }
 }
