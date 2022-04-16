@@ -79,6 +79,22 @@ public class PlayerctlControls implements ModInitializer {
                 showStatus = !showStatus;
                 return 1;
             })));
+            dispatcher.register(literal("pctl").then(literal("volup").executes(context -> {
+                try {
+                    rt.exec("playerctl volume 0.1+");
+                    return 1;
+                } catch (final IOException e) {
+                    throw new RuntimeException(e);
+                }
+            })));
+            dispatcher.register(literal("pctl").then(literal("voldown").executes(context -> {
+                try {
+                    rt.exec("playerctl volume 0.1-");
+                    return 1;
+                } catch (final IOException e) {
+                    throw new RuntimeException(e);
+                }
+            })));
         });
         if (showStatus) {
             final var timer = new Timer();
