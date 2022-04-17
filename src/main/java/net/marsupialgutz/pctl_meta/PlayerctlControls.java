@@ -20,7 +20,7 @@ import static net.minecraft.server.command.CommandManager.literal;
 
 public class PlayerctlControls implements ModInitializer {
     public static String result, lastImg, playing;
-    public static boolean showStatus = true;
+    public static boolean showStatus = true, statCheck = true;
     public static NativeImageBackedTexture nativeImageBackedTexture;
 
     @Override
@@ -44,7 +44,6 @@ public class PlayerctlControls implements ModInitializer {
                         } catch (final IOException e) {
                             throw new RuntimeException(e);
                         }
-                        playing = "Paused";
                         return 1;
                     }
                 }
@@ -62,7 +61,6 @@ public class PlayerctlControls implements ModInitializer {
                             }
                             final String[] cmd = {"playerctl", "pause"};
                             rt.exec(cmd);
-                            playing = "Playing";
                         } catch (final IOException e) {
                             throw new RuntimeException(e);
                         }
@@ -78,10 +76,6 @@ public class PlayerctlControls implements ModInitializer {
                             rt.exec("playerctl play-pause");
                             if (playing.equals("Stopped"))
                                 return 0;
-                            if (playing.equals("Playing"))
-                                playing = "Paused";
-                            else
-                                playing = "Playing";
                             return 1;
                         } catch (final IOException e) {
                             throw new RuntimeException(e);
@@ -168,6 +162,10 @@ public class PlayerctlControls implements ModInitializer {
                         }
                         if (res == null) {
                             res = "https://possums.xyz/imgs/no-song.png";
+                            statCheck = false;
+                            playing = "OFF";
+                        } else {
+                            statCheck = true;
                         }
                         if (!(Objects.equals(lastImg, res))) {
                             InputStream input = new URL(res).openStream();
@@ -175,21 +173,44 @@ public class PlayerctlControls implements ModInitializer {
                             nativeImageBackedTexture = new NativeImageBackedTexture(nativeImage);
                             lastImg = res;
                         }
-                        cmd = new String[]{"playerctl", "metadata", "-f", "'{{ artist }} - {{ title }}'"};
-                        proc = rt.exec(cmd);
-                        stdInput = new BufferedReader(new InputStreamReader(proc.getInputStream()));
-                        while ((s = stdInput.readLine()) != null) result = s.substring(1, s.length() - 1);
-                        if (result.equals("No players found")) result = "No players found";
-                        cmd = new String[]{"playerctl", "status"};
-                        proc = rt.exec(cmd);
-                        stdInput = new BufferedReader(new InputStreamReader(proc.getInputStream()));
-                        while ((s = stdInput.readLine()) != null) {
-                            switch (s) {
+                    } catch (final IOException e) {
+                        run();
+                    }
+                }
+            }, 0, 1000);
+            timer.schedule(new TimerTask() {
+                @Override
+                public void run() {
+                    try {
+                        String s2;
+                        String[] cmd2 = {"playerctl", "metadata", "-f", "'{{ artist }} - {{ title }}'"};
+                        Process proc2 = rt.exec(cmd2);
+                        BufferedReader stdInput2 = new BufferedReader(new InputStreamReader(proc2.getInputStream()));
+                        while ((s2 = stdInput2.readLine()) != null) {
+                            result = s2.substring(1, s2.length() - 1);
+                        }
+                    } catch (final IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+            }, 0, 1000);
+            timer.schedule(new TimerTask() {
+                @Override
+                public void run() {
+                    try {
+                        String s3;
+                        String[] cmd3 = {"playerctl", "status"};
+                        Process proc3 = rt.exec(cmd3);
+                        BufferedReader stdInput3 = new BufferedReader(new InputStreamReader(proc3.getInputStream()));
+                        while ((s3 = stdInput3.readLine()) != null) {
+                            switch (s3) {
                                 case "Playing" -> playing = "Playing";
                                 case "Paused" -> playing = "Paused";
-                                default -> playing = "Stopped";
+                                case "Stopped" -> playing = "Stopped";
+                                default -> playing = "OFF";
                             }
                         }
+                        System.out.println("playing: " + playing);
                     } catch (final IOException e) {
                         throw new RuntimeException(e);
                     }
