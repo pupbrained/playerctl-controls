@@ -26,11 +26,8 @@ public class InGameHudMixin {
                     RenderSystem.setShaderTexture(0, id);
                     DrawableHelper.drawTexture(matrices, 5, 5, 0, 0, 25, 25, 25, 25);
                     mc.textRenderer.drawWithShadow(matrices, "Song:", 35, 8, 0xffffff);
-                    if (playing) {
-                        mc.textRenderer.drawWithShadow(matrices, result, 35, 18, 0xffffff);
-                    } else {
-                        mc.textRenderer.drawWithShadow(matrices, result + " (Paused)", 35, 18, 0xffffff);
-                    }
+                    if (playing.equals("Playing")) mc.textRenderer.drawWithShadow(matrices, result, 35, 18, 0xffffff);
+                    else if (playing.equals("Paused")) mc.textRenderer.drawWithShadow(matrices, result + " (Paused)", 35, 18, 0xffffff);
                 }
             }
         }

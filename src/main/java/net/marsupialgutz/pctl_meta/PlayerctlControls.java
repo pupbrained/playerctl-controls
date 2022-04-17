@@ -19,8 +19,8 @@ import java.util.TimerTask;
 import static net.minecraft.server.command.CommandManager.literal;
 
 public class PlayerctlControls implements ModInitializer {
-    public static String result, lastImg;
-    public static boolean playing, showStatus = true;
+    public static String result, lastImg, playing;
+    public static boolean showStatus = true;
     public static NativeImageBackedTexture nativeImageBackedTexture;
 
     @Override
@@ -33,7 +33,9 @@ public class PlayerctlControls implements ModInitializer {
                 if (!(result == null)) {
                     if (!(result.equals("No players found"))) {
                         try {
-                            if (playing) {
+                            if (playing.equals("Stopped"))
+                                return 0;
+                            if (playing.equals("Playing")) {
                                 mc.player.sendMessage(Text.of("Already playing!"), true);
                                 return 1;
                             }
@@ -42,7 +44,7 @@ public class PlayerctlControls implements ModInitializer {
                         } catch (final IOException e) {
                             throw new RuntimeException(e);
                         }
-                        playing = true;
+                        playing = "Paused";
                         return 1;
                     }
                 }
@@ -52,13 +54,15 @@ public class PlayerctlControls implements ModInitializer {
                 if (!(result == null)) {
                     if (!(result.equals("No players found"))) {
                         try {
-                            if (!playing) {
+                            if (playing.equals("Stopped"))
+                                return 0;
+                            if (playing.equals("Paused")) {
                                 mc.player.sendMessage(Text.of("Already paused!"), true);
                                 return 1;
                             }
                             final String[] cmd = {"playerctl", "pause"};
                             rt.exec(cmd);
-                            playing = false;
+                            playing = "Playing";
                         } catch (final IOException e) {
                             throw new RuntimeException(e);
                         }
@@ -72,7 +76,12 @@ public class PlayerctlControls implements ModInitializer {
                     if (!(result.equals("No players found"))) {
                         try {
                             rt.exec("playerctl play-pause");
-                            playing = !playing;
+                            if (playing.equals("Stopped"))
+                                return 0;
+                            if (playing.equals("Playing"))
+                                playing = "Paused";
+                            else
+                                playing = "Playing";
                             return 1;
                         } catch (final IOException e) {
                             throw new RuntimeException(e);
@@ -158,10 +167,7 @@ public class PlayerctlControls implements ModInitializer {
                             res = s.substring(1, s.length() - 1);
                         }
                         if (res == null) {
-                            res = "https://listimg.pinclipart.com/picdir/s/330-3300806_red-slash-png-clipart-images-gallery-for-free.png";
-                            InputStream input = new URL(res).openStream();
-                            var nativeImage = NativeImage.read(input);
-                            nativeImageBackedTexture = new NativeImageBackedTexture(nativeImage);
+                            res = "https://possums.xyz/imgs/no-song.png";
                         }
                         if (!(Objects.equals(lastImg, res))) {
                             InputStream input = new URL(res).openStream();
@@ -177,7 +183,13 @@ public class PlayerctlControls implements ModInitializer {
                         cmd = new String[]{"playerctl", "status"};
                         proc = rt.exec(cmd);
                         stdInput = new BufferedReader(new InputStreamReader(proc.getInputStream()));
-                        while ((s = stdInput.readLine()) != null) playing = s.equals("Playing");
+                        while ((s = stdInput.readLine()) != null) {
+                            switch (s) {
+                                case "Playing" -> playing = "Playing";
+                                case "Paused" -> playing = "Paused";
+                                default -> playing = "Stopped";
+                            }
+                        }
                     } catch (final IOException e) {
                         throw new RuntimeException(e);
                     }
