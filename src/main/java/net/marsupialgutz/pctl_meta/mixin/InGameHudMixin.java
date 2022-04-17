@@ -18,13 +18,13 @@ public class InGameHudMixin {
     @Inject(method = "render", at = @At("RETURN"))
 
     public void onRender(final MatrixStack matrices, final float tickDelta, final CallbackInfo info) {
-        final var mc = MinecraftClient.getInstance();
         if (showStatus && !MinecraftClient.getInstance().options.debugEnabled) {
-            var id = mc.getTextureManager().registerDynamicTexture("img", nativeImageBackedTexture);
             if (result != null) {
                 if (playing != null) {
                     if (!playing.equals("Stopped")) {
                         if (statCheck) {
+                            final var mc = MinecraftClient.getInstance();
+                            var id = mc.getTextureManager().registerDynamicTexture("img", nativeImageBackedTexture);
                             RenderSystem.setShaderTexture(0, id);
                             DrawableHelper.drawTexture(matrices, 5, 5, 0, 0, 25, 25, 25, 25);
                             mc.textRenderer.drawWithShadow(matrices, "§lSong:", 35, 8, 0xffffff);
