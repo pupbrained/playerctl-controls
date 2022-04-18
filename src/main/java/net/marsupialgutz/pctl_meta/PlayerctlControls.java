@@ -1,7 +1,10 @@
 package net.marsupialgutz.pctl_meta;
 
-import static net.fabricmc.fabric.api.command.v1.CommandRegistrationCallback.EVENT;
-import static net.minecraft.server.command.CommandManager.literal;
+import net.fabricmc.api.ModInitializer;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.texture.NativeImage;
+import net.minecraft.client.texture.NativeImageBackedTexture;
+import net.minecraft.text.Text;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -12,11 +15,8 @@ import java.util.Objects;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import net.fabricmc.api.ModInitializer;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.texture.NativeImage;
-import net.minecraft.client.texture.NativeImageBackedTexture;
-import net.minecraft.text.Text;
+import static net.fabricmc.fabric.api.command.v1.CommandRegistrationCallback.EVENT;
+import static net.minecraft.server.command.CommandManager.literal;
 
 public class PlayerctlControls implements ModInitializer {
     public static String result, lastImg, playing;
@@ -173,8 +173,6 @@ public class PlayerctlControls implements ModInitializer {
                                 lastImg = res;
                             }
                         }
-                        System.out.println("res: " + res);
-                        System.out.println("lastImg: " + lastImg);
                     } catch (final IOException e) {
                         lastImg = null;
                     }
@@ -191,7 +189,6 @@ public class PlayerctlControls implements ModInitializer {
                                 new InputStreamReader(proc2.getInputStream()));
                         while ((s2 = stdInput2.readLine()) != null) {
                             result = s2.substring(1, s2.length() - 1);
-                            System.out.println("result: " + result);
                         }
                     } catch (final IOException e) {
                         throw new RuntimeException(e);
@@ -215,7 +212,6 @@ public class PlayerctlControls implements ModInitializer {
                                 default -> playing = "OFF";
                             }
                         }
-                        System.out.println("playing: " + playing);
                     } catch (final IOException e) {
                         throw new RuntimeException(e);
                     }
