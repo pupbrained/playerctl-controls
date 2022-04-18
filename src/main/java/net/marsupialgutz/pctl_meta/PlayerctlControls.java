@@ -1,11 +1,7 @@
 package net.marsupialgutz.pctl_meta;
 
-import net.fabricmc.api.ModInitializer;
-import net.fabricmc.fabric.api.command.v1.CommandRegistrationCallback;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.texture.NativeImage;
-import net.minecraft.client.texture.NativeImageBackedTexture;
-import net.minecraft.text.Text;
+import static net.fabricmc.fabric.api.command.v1.CommandRegistrationCallback.EVENT;
+import static net.minecraft.server.command.CommandManager.literal;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -16,7 +12,11 @@ import java.util.Objects;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import static net.minecraft.server.command.CommandManager.literal;
+import net.fabricmc.api.ModInitializer;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.texture.NativeImage;
+import net.minecraft.client.texture.NativeImageBackedTexture;
+import net.minecraft.text.Text;
 
 public class PlayerctlControls implements ModInitializer {
     public static String result, lastImg, playing;
@@ -28,7 +28,7 @@ public class PlayerctlControls implements ModInitializer {
         final var mc = MinecraftClient.getInstance();
         final var rt = Runtime.getRuntime();
         assert mc.player != null;
-        CommandRegistrationCallback.EVENT.register((dispatcher, dedicated) -> {
+        EVENT.register((dispatcher, dedicated) -> {
             dispatcher.register(literal("pctl").then(literal("play").executes(context -> {
                 if (!(result == null)) {
                     if (!(result.equals("No players found"))) {
@@ -39,7 +39,7 @@ public class PlayerctlControls implements ModInitializer {
                                 mc.player.sendMessage(Text.of("Already playing!"), true);
                                 return 1;
                             }
-                            final String[] cmd = {"playerctl", "play"};
+                            final String[] cmd = { "playerctl", "play" };
                             rt.exec(cmd);
                         } catch (final IOException e) {
                             throw new RuntimeException(e);
@@ -59,7 +59,7 @@ public class PlayerctlControls implements ModInitializer {
                                 mc.player.sendMessage(Text.of("Already paused!"), true);
                                 return 1;
                             }
-                            final String[] cmd = {"playerctl", "pause"};
+                            final String[] cmd = { "playerctl", "pause" };
                             rt.exec(cmd);
                         } catch (final IOException e) {
                             throw new RuntimeException(e);
@@ -152,29 +152,31 @@ public class PlayerctlControls implements ModInitializer {
                 @Override
                 public void run() {
                     try {
-                        String[] cmd = {"playerctl", "metadata", "-f", "'{{ mpris:artUrl }}'"};
-                        Process proc = rt.exec(cmd);
-                        BufferedReader stdInput = new BufferedReader(new InputStreamReader(proc.getInputStream()));
+                        final String[] cmd = { "playerctl", "metadata", "-f", "'{{ mpris:artUrl }}'" };
+                        final Process proc = rt.exec(cmd);
+                        final BufferedReader stdInput = new BufferedReader(
+                                new InputStreamReader(proc.getInputStream()));
                         String s;
                         String res = null;
                         while ((s = stdInput.readLine()) != null) {
                             res = s.substring(1, s.length() - 1);
                         }
                         if (res == null) {
-                            res = "https://possums.xyz/imgs/no-song.png";
                             statCheck = false;
                             playing = "OFF";
                         } else {
                             statCheck = true;
+                            if (!(Objects.equals(lastImg, res))) {
+                                final InputStream input = new URL(res).openStream();
+                                final var nativeImage = NativeImage.read(input);
+                                nativeImageBackedTexture = new NativeImageBackedTexture(nativeImage);
+                                lastImg = res;
+                            }
                         }
-                        if (!(Objects.equals(lastImg, res))) {
-                            InputStream input = new URL(res).openStream();
-                            var nativeImage = NativeImage.read(input);
-                            nativeImageBackedTexture = new NativeImageBackedTexture(nativeImage);
-                            lastImg = res;
-                        }
+                        System.out.println("res: " + res);
+                        System.out.println("lastImg: " + lastImg);
                     } catch (final IOException e) {
-                        run();
+                        lastImg = null;
                     }
                 }
             }, 0, 1000);
@@ -183,11 +185,13 @@ public class PlayerctlControls implements ModInitializer {
                 public void run() {
                     try {
                         String s2;
-                        String[] cmd2 = {"playerctl", "metadata", "-f", "'{{ artist }} - {{ title }}'"};
-                        Process proc2 = rt.exec(cmd2);
-                        BufferedReader stdInput2 = new BufferedReader(new InputStreamReader(proc2.getInputStream()));
+                        final String[] cmd2 = { "playerctl", "metadata", "-f", "'{{ artist }} - {{ title }}'" };
+                        final Process proc2 = rt.exec(cmd2);
+                        final BufferedReader stdInput2 = new BufferedReader(
+                                new InputStreamReader(proc2.getInputStream()));
                         while ((s2 = stdInput2.readLine()) != null) {
                             result = s2.substring(1, s2.length() - 1);
+                            System.out.println("result: " + result);
                         }
                     } catch (final IOException e) {
                         throw new RuntimeException(e);
@@ -199,9 +203,10 @@ public class PlayerctlControls implements ModInitializer {
                 public void run() {
                     try {
                         String s3;
-                        String[] cmd3 = {"playerctl", "status"};
-                        Process proc3 = rt.exec(cmd3);
-                        BufferedReader stdInput3 = new BufferedReader(new InputStreamReader(proc3.getInputStream()));
+                        final String[] cmd3 = { "playerctl", "status" };
+                        final Process proc3 = rt.exec(cmd3);
+                        final BufferedReader stdInput3 = new BufferedReader(
+                                new InputStreamReader(proc3.getInputStream()));
                         while ((s3 = stdInput3.readLine()) != null) {
                             switch (s3) {
                                 case "Playing" -> playing = "Playing";
