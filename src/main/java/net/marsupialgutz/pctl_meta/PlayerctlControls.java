@@ -1,6 +1,9 @@
 package net.marsupialgutz.pctl_meta;
 
+import com.oroarmor.config.Config;
+import com.oroarmor.config.ConfigItemGroup;
 import net.fabricmc.api.ModInitializer;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.texture.NativeImage;
 import net.minecraft.client.texture.NativeImageBackedTexture;
@@ -11,6 +14,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
+import java.util.List;
 import java.util.Objects;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -19,12 +23,15 @@ import static net.fabricmc.fabric.api.command.v1.CommandRegistrationCallback.EVE
 import static net.minecraft.server.command.CommandManager.literal;
 
 public class PlayerctlControls implements ModInitializer {
+    public static final Config CONFIG = new PlayerctlConfig();
     public static String result, lastImg, playing;
-    public static boolean showStatus = true, statCheck = true;
+    public static boolean showStatus, statCheck = true;
     public static NativeImageBackedTexture nativeImageBackedTexture;
 
     @Override
     public void onInitialize() {
+        initCfg();
+        readCfg();
         final var mc = MinecraftClient.getInstance();
         final var rt = Runtime.getRuntime();
         assert mc.player != null;
@@ -110,15 +117,6 @@ public class PlayerctlControls implements ModInitializer {
                 }
                 return 0;
             })));
-            dispatcher.register(literal("pctl").then(literal("togglestatus").executes(context -> {
-                if (!(result == null)) {
-                    if (!(result.equals("No players found"))) {
-                        showStatus = !showStatus;
-                        return 1;
-                    }
-                }
-                return 0;
-            })));
             dispatcher.register(literal("pctl").then(literal("volup").executes(context -> {
                 if (!(result == null)) {
                     if (!(result.equals("No players found"))) {
@@ -152,6 +150,7 @@ public class PlayerctlControls implements ModInitializer {
                 @Override
                 public void run() {
                     try {
+                        readCfg();
                         final String[] cmd = { "playerctl", "metadata", "-f", "'{{ mpris:artUrl }}'" };
                         final Process proc = rt.exec(cmd);
                         final BufferedReader stdInput = new BufferedReader(
@@ -218,5 +217,15 @@ public class PlayerctlControls implements ModInitializer {
                 }
             }, 0, 1000);
         }
+    }
+    private void initCfg() {
+        CONFIG.readConfigFromFile();
+        CONFIG.saveConfigToFile();
+        ServerLifecycleEvents.SERVER_STOPPED.register(instance -> CONFIG.saveConfigToFile());
+    }
+
+    private void readCfg() {
+        List<ConfigItemGroup> cfgs = CONFIG.getConfigs();
+        showStatus = cfgs.get(0).toJson().get("show_status").getAsBoolean();
     }
 }

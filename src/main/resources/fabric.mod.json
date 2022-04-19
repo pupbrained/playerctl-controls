@@ -17,6 +17,9 @@
   "entrypoints": {
     "main": [
       "net.marsupialgutz.pctl_meta.PlayerctlControls"
+    ],
+    "modmenu": [
+      "net.marsupialgutz.pctl_meta.ModMenuIntegration"
     ]
   },
   "mixins": [
